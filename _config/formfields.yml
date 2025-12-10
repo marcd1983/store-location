@@ -1,0 +1,9 @@
+---
+Name: form-fields
+After:
+  - '#userformsconfig'
+---
+SilverStripe\UserForms\Model\EditableFormField:
+  editable_field_classes:
+    - App\UserForms\Fields\DepartmentDropdownField
+     - App\UserForms\Fields\LocationDropdownField

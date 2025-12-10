@@ -1,0 +1,22 @@
+{
+    "name": "antlion/store-location",
+    "description": "Store location module",
+    "license": "BSD-3-Clause",
+    "type": "silverstripe-vendormodule",
+    "keywords": [
+        "silverstripe",
+        "elemental",
+        "blocks",
+        "store location"
+    ],
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "autoload": {
+        "psr-4": {
+            "Antlion\\StoreLocation\\": "src/"
+        }
+    },
+    "config": {
+        "process-timeout": 600
+    }
+}
