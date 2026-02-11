@@ -10,6 +10,8 @@ class StaffAdmin extends ModelAdmin
 {
     private static string $menu_title = 'Store Staff';
     private static string $url_segment = 'store-staff';
+    private static $menu_icon_class = 'font-icon-torsos-all';
+
 
     private static array $managed_models = [
         StaffMember::class,
