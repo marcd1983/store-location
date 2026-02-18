@@ -27,6 +27,7 @@ class StoreLocationPage extends Page
 
     /** Address & contact details */
     private static array $db = [
+        'LocationName' => 'Varchar(255)',
         'Address'  => 'Varchar(255)',
         'Address2' => 'Varchar(255)',
         'City'     => 'Varchar(100)',
@@ -128,6 +129,7 @@ class StoreLocationPage extends Page
             'LocationDetails',
             'Location details',
             [
+                TextField::create('LocationName', 'Location name'),
                 TextField::create('Address', 'Address'),
                 TextField::create('Address2', 'Address line 2'),
                 TextField::create('City', 'City'),
