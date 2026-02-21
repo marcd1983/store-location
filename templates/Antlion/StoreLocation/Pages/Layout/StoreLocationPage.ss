@@ -1,5 +1,4 @@
 
-<div class="main grid-container $PageWidth" role="main">
 <% include TitleBar %>
 <% if $Content %>
 		<div class="grid-x content">
@@ -10,7 +9,7 @@
 	<% else %>
 			$ElementalArea
 	<% end_if %>
-  <div class="grid-x grid-padding-x grid-padding-y">
+  <div class="grid-x grid-margin-x grid-margin-y">
     <div class="cell small-12 medium-6">
    
       <h3 class="section-title">Visit us</h3>
@@ -101,5 +100,3 @@
     "url": "$AbsoluteLink"
   }
   </script>
-
-</div>

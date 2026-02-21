@@ -1,4 +1,4 @@
-<div class="cell element element-dept-staff">
+<div class="element element-dept-staff">
   <% if $Title && $ShowTitle %>
       <% with $HeadingTag %>
           <{$Me} class="element-title">$Up.Title.XML</{$Me}>

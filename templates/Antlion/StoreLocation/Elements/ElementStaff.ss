@@ -1,5 +1,5 @@
-<div class="cell element element-staff">
-   <% if $Title && $ShowTitle %><h2 class="element__title">$Title</h2><% end_if %>
+<div class="element element-staff">
+   <% if $Title && $ShowTitle %><h2 class="element-title">$Title</h2><% end_if %>
   <% if $OrderedStaff.Count %>
     <div class="grid-x grid-padding-x grid-padding-y large-up-{$Top.Columns}">
       <% loop $OrderedStaff %>
