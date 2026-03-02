@@ -23,6 +23,7 @@ use SilverStripe\ORM\ValidationResult;
 use App\Models\FormSubmission;
 use App\Service\CrmIntegrationService;
 
+
 class StoreLocationPageController extends PageController
 {
     private static array $allowed_actions = [
@@ -59,6 +60,36 @@ class StoreLocationPageController extends PageController
         }
         return array_values($seen);
     }
+
+    private function resolveFromEmail(): string
+    {
+        $cfg = SiteConfig::current_site_config();
+
+        // Optional per-page override first (if you keep MailFrom on the page)
+        $candidates = [
+            trim((string)($this->MailFrom ?? '')),
+            trim((string)($cfg->DefaultFromEmail ?? '')),
+        ];
+
+        foreach ($candidates as $email) {
+            if ($email && $this->isValidEmail($email)) {
+                return $email;
+            }
+        }
+
+        // Last fallback (valid shape, but not ideal) — avoid www.
+        $host = (string) parse_url(Director::absoluteBaseURL(), PHP_URL_HOST);
+        $host = preg_replace('/^www\./i', '', $host);
+        return 'noreply@' . $host;
+    }
+
+    private function resolveFromName(): ?string
+    {
+        $cfg = SiteConfig::current_site_config();
+        $name = trim((string)($cfg->DefaultFromName ?? ''));
+        return $name !== '' ? $name : null;
+    }
+
 
     /** Department options for THIS location */
     private function departmentSource(): array
@@ -235,15 +266,22 @@ class StoreLocationPageController extends PageController
             'department_title' => $dept?->Title,
         ]);
 
+        $fromEmail = $this->resolveFromEmail();
+        $fromName  = $this->resolveFromName();
+
         $email = Email::create()
             ->setTo($recipients)
-            ->setFrom($from)
+            ->setFrom($fromEmail, $fromName)
             ->setSubject($subject)
             ->setHTMLTemplate('Antlion/StoreLocation/Email/ContactEmailLocation')
             ->setData($templateData);
 
+        $replyTo = trim($data['Email'] ?? '');
+        if (!$this->isValidEmail($replyTo)) {
+            $replyTo = '';
+        }
         if ($replyTo) {
-            $email->addReplyTo($replyTo, $data['Email'] ?? null);
+            $email->addReplyTo($replyTo, $data['Name'] ?? null);
         }
 
         try {
@@ -276,7 +314,7 @@ class StoreLocationPageController extends PageController
             HiddenField::create('StaffID', ''),
             HiddenField::create('PageUrl', '', $this->AbsoluteLink()),
 
-            // 🔹 CRM helpers
+            // CRM helpers
             HiddenField::create('CRMSource', '', 'staff-contact'),
             HiddenField::create('PageURL', '', $this->AbsoluteLink()),
             HiddenField::create('LocationID', '', (string)$this->ID),
@@ -334,7 +372,7 @@ class StoreLocationPageController extends PageController
         ]);
         $submission->write();
 
-        // 🔗 CRM integration hook
+        // CRM integration hook
         $crm = CrmIntegrationService::singleton();
         $crm->captureLead($data, $this->getRequest(), [
             'source'          => $data['CRMSource'] ?? 'staff-contact',
@@ -345,13 +383,20 @@ class StoreLocationPageController extends PageController
             'staff_name'      => $staffName,
         ]);
 
+        $fromEmail = $this->resolveFromEmail();
+        $fromName  = $this->resolveFromName();
+
         $email = Email::create()
             ->setTo($recipients)
-            ->setFrom($from)
+            ->setFrom($fromEmail, $fromName)
             ->setSubject('Website enquiry')
             ->setHTMLTemplate('Email/StaffContactFormEmail')
             ->setData($data);
 
+        $replyTo = trim($data['Email'] ?? '');
+        if (!$this->isValidEmail($replyTo)) {
+            $replyTo = '';
+        }
         if ($replyTo) {
             $email->addReplyTo($replyTo, $data['Name'] ?? null);
         }

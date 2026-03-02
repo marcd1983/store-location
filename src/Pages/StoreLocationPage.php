@@ -64,8 +64,15 @@ class StoreLocationPage extends Page
 
     public function getFullAddress(): string
     {
-        $parts = array_filter([$this->Address, $this->Address2, $this->City, $this->State, $this->Zip]);
-        return DBField::create_field('Varchar', implode(', ', $parts));
+        $parts = array_filter([
+            trim((string) $this->Address),
+            trim((string) $this->Address2),
+            trim((string) $this->City),
+            trim((string) $this->State),
+            trim((string) $this->Zip),
+        ], fn ($v) => $v !== '');
+
+        return implode(', ', $parts);
     }
 
     /**
