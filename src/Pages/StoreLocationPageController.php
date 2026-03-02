@@ -21,7 +21,6 @@ use Antlion\StoreLocation\Model\StoreDepartment;
 use Antlion\StoreLocation\Model\StaffMember;
 use SilverStripe\ORM\ValidationResult;
 use App\Models\FormSubmission;
-use App\Service\CrmIntegrationService;
 
 
 class StoreLocationPageController extends PageController
@@ -61,35 +60,32 @@ class StoreLocationPageController extends PageController
         return array_values($seen);
     }
 
+    /**
+     * Sender (From) comes from SiteConfig:
+     * - DefaultFromEmail must be a valid email
+     * - DefaultFromName optional (string)
+     * Fallbacks keep you from hard-crashing if config is missing.
+     */
     private function resolveFromEmail(): string
     {
         $cfg = SiteConfig::current_site_config();
+        $from = trim((string)($cfg->DefaultFromEmail ?? ''));
 
-        // Optional per-page override first (if you keep MailFrom on the page)
-        $candidates = [
-            trim((string)($this->MailFrom ?? '')),
-            trim((string)($cfg->DefaultFromEmail ?? '')),
-        ];
-
-        foreach ($candidates as $email) {
-            if ($email && $this->isValidEmail($email)) {
-                return $email;
-            }
+        if ($from && $this->isValidEmail($from)) {
+            return $from;
         }
 
-        // Last fallback (valid shape, but not ideal) — avoid www.
         $host = (string) parse_url(Director::absoluteBaseURL(), PHP_URL_HOST);
         $host = preg_replace('/^www\./i', '', $host);
         return 'noreply@' . $host;
     }
 
-    private function resolveFromName(): ?string
+    private function resolveFromName(): string
     {
         $cfg = SiteConfig::current_site_config();
         $name = trim((string)($cfg->DefaultFromName ?? ''));
-        return $name !== '' ? $name : null;
+        return $name; // may be empty string, which is fine
     }
-
 
     /** Department options for THIS location */
     private function departmentSource(): array
@@ -149,14 +145,7 @@ class StoreLocationPageController extends PageController
             TextareaField::create('Message', 'Question or Comment*')
                 ->setRows(6),
 
-            // Existing context (was PageUrl)
-            HiddenField::create('PageUrl', '', $this->AbsoluteLink()),
-
-            // 🔹 CRM-friendly helpers
-            HiddenField::create('CRMSource', '', 'location-contact'),
-            HiddenField::create('PageURL', '', $this->AbsoluteLink()),
-            HiddenField::create('LocationID', '', (string)$this->ID),
-            HiddenField::create('LocationTitle', '', $this->Title)
+            HiddenField::create('PageUrl', '', $this->AbsoluteLink())
         );
 
         if ($hasDepts) {
@@ -183,6 +172,7 @@ class StoreLocationPageController extends PageController
             $fields->push(HiddenField::create('DepartmentID', '', ''));
         }
 
+
         $actions = FieldList::create(
             FormAction::create('doContactForm', 'Send message')
                 ->addExtraClass('button primary')
@@ -191,6 +181,7 @@ class StoreLocationPageController extends PageController
         $required = RequiredFields::create(['Name', 'Email', 'Message']);
         $form     = Form::create($this, 'ContactForm', $fields, $actions, $required);
 
+        // Pluggable spam protector (will be NSWDPC if configured)
         if (method_exists($form, 'enableSpamProtection')) {
             $form->enableSpamProtection();
         }
@@ -198,17 +189,15 @@ class StoreLocationPageController extends PageController
         return $form;
     }
 
-
     public function doContactForm(array $data, Form $form): HTTPResponse
     {
         if (empty($data['Name']) || empty($data['Email']) || empty($data['Message'])) {
             $form->sessionMessage('Please complete the required fields.', ValidationResult::TYPE_ERROR);
             return $this->redirectBack();
         }
-        
+
         $dept = null;
         if (!empty($data['DepartmentID'])) {
-            // Safe: only finds departments linked to THIS page
             $dept = $this->dataRecord->Departments()->byID((int) $data['DepartmentID']);
         }
 
@@ -216,16 +205,13 @@ class StoreLocationPageController extends PageController
         if (empty($recipients)) {
             $form->sessionMessage(
                 'Sorry, we could not route your message (no valid recipient configured). Please call this location.',
-                'bad'
+                ValidationResult::TYPE_ERROR
             );
             return $this->redirectBack();
         }
 
-        $fromHost = (string) parse_url(Director::absoluteBaseURL(), PHP_URL_HOST);
-        $from     = trim($this->MailFrom ?? '') ?: 'noreply@' . $fromHost;
-        $replyTo  = trim($data['Email'] ?? '');
-
         $subject = sprintf('Website enquiry – %s', $this->Title);
+
         $templateData = [
             'Name'            => $data['Name'] ?? '',
             'Email'           => $data['Email'] ?? '',
@@ -239,7 +225,6 @@ class StoreLocationPageController extends PageController
 
         $sentTo = implode(', ', $recipients);
 
-        // Log to FormSubmission
         $submission = FormSubmission::create([
             'FormName'       => 'Location contact',
             'FormAction'     => 'ContactForm',
@@ -255,19 +240,8 @@ class StoreLocationPageController extends PageController
         ]);
         $submission->write();
 
-        // 🔗 CRM integration hook
-        $crm = CrmIntegrationService::singleton();
-        $crm->captureLead($data, $this->getRequest(), [
-            'source'           => $data['CRMSource'] ?? 'location-contact',
-            'page_url'         => $data['PageURL'] ?? ($data['PageUrl'] ?? $this->AbsoluteLink()),
-            'location_id'      => $this->ID,
-            'location_title'   => $this->Title,
-            'department_id'    => $dept?->ID,
-            'department_title' => $dept?->Title,
-        ]);
-
         $fromEmail = $this->resolveFromEmail();
-        $fromName  = $this->resolveFromName();
+        $fromName  = $this->resolveFromName(); // always string
 
         $email = Email::create()
             ->setTo($recipients)
@@ -276,12 +250,10 @@ class StoreLocationPageController extends PageController
             ->setHTMLTemplate('Antlion/StoreLocation/Email/ContactEmailLocation')
             ->setData($templateData);
 
-        $replyTo = trim($data['Email'] ?? '');
-        if (!$this->isValidEmail($replyTo)) {
-            $replyTo = '';
-        }
-        if ($replyTo) {
-            $email->addReplyTo($replyTo, $data['Name'] ?? null);
+        // Reply-To must be email only (Symfony mailer strict)
+        $replyTo = trim((string)($data['Email'] ?? ''));
+        if ($replyTo && $this->isValidEmail($replyTo)) {
+            $email->setReplyTo($replyTo);
         }
 
         try {
@@ -289,19 +261,17 @@ class StoreLocationPageController extends PageController
             $submission->Status = 'Emailed';
             $submission->write();
 
-            $form->sessionMessage('Thanks! Your message has been sent.', 'good');
+            $form->sessionMessage('Thanks! Your message has been sent.', ValidationResult::TYPE_GOOD);
         } catch (\Throwable $e) {
             $submission->Status       = 'Error';
             $submission->ErrorMessage = $e->getMessage();
             $submission->write();
 
-            $form->sessionMessage('Sorry, something went wrong sending your message.', 'bad');
+            $form->sessionMessage('Sorry, something went wrong sending your message.', ValidationResult::TYPE_ERROR);
         }
 
         return $this->redirectBack();
     }
-
-
 
     /* ---------- OPTIONAL: per-staff contact (hide staff emails) ---------- */
 
@@ -313,50 +283,46 @@ class StoreLocationPageController extends PageController
             TextareaField::create('Message', 'Question or Comment*')->setRows(6),
             HiddenField::create('StaffID', ''),
             HiddenField::create('PageUrl', '', $this->AbsoluteLink()),
-
-            // CRM helpers
-            HiddenField::create('CRMSource', '', 'staff-contact'),
-            HiddenField::create('PageURL', '', $this->AbsoluteLink()),
-            HiddenField::create('LocationID', '', (string)$this->ID),
-            HiddenField::create('LocationTitle', '', $this->Title)
         );
 
         $actions  = FieldList::create(
             FormAction::create('doStaffContactForm', 'Send Email')
                 ->addExtraClass('button')
         );
-        $required = RequiredFields::create(['Name', 'Email', 'Message']);
 
+        $required = RequiredFields::create(['Name', 'Email', 'Message']);
         $form = Form::create($this, 'StaffContactForm', $fields, $actions, $required);
+
         if (method_exists($form, 'enableSpamProtection')) {
             $form->enableSpamProtection();
         }
+
         return $form;
     }
 
-
     public function doStaffContactForm(array $data, Form $form): HTTPResponse
     {
-        $staff = null;
-        if (!empty($data['StaffID'])) {
-            $staff = StaffMember::get()->byID((int)$data['StaffID']);
-        }
-
-        // Default to page/mailto if staff has no email
-        $fallbackEmail = ($this->Mailto ?? '') ?: (SiteConfig::current_site_config()->Email ?? '');
-        $recipients = $this->parseEmails($staff?->Email ?: $fallbackEmail);
-        if (empty($recipients)) {
-            $form->sessionMessage('No valid recipient configured for that staff member.', 'bad');
+        if (empty($data['Name']) || empty($data['Email']) || empty($data['Message'])) {
+            $form->sessionMessage('Please complete the required fields.', ValidationResult::TYPE_ERROR);
             return $this->redirectBack();
         }
 
-        $from    = trim($this->MailFrom ?? '') ?: 'noreply@' . parse_url(Director::absoluteBaseURL(), PHP_URL_HOST);
-        $replyTo = trim($data['Email'] ?? '');
+        $staff = null;
+        if (!empty($data['StaffID'])) {
+            $staff = StaffMember::get()->byID((int) $data['StaffID']);
+        }
+
+        $fallbackEmail = ($this->Mailto ?? '') ?: (SiteConfig::current_site_config()->Email ?? '');
+        $recipients = $this->parseEmails($staff?->Email ?: $fallbackEmail);
+
+        if (empty($recipients)) {
+            $form->sessionMessage('No valid recipient configured for that staff member.', ValidationResult::TYPE_ERROR);
+            return $this->redirectBack();
+        }
 
         $sentTo = implode(', ', $recipients);
         $staffName = $staff?->Name ?: $staff?->Title ?: '';
 
-        // Log to FormSubmission
         $submission = FormSubmission::create([
             'FormName'       => 'Staff contact',
             'FormAction'     => 'StaffContactForm',
@@ -372,17 +338,6 @@ class StoreLocationPageController extends PageController
         ]);
         $submission->write();
 
-        // CRM integration hook
-        $crm = CrmIntegrationService::singleton();
-        $crm->captureLead($data, $this->getRequest(), [
-            'source'          => $data['CRMSource'] ?? 'staff-contact',
-            'page_url'        => $data['PageURL'] ?? ($data['PageUrl'] ?? $this->AbsoluteLink()),
-            'location_id'     => $this->ID,
-            'location_title'  => $this->Title,
-            'staff_id'        => $staff?->ID,
-            'staff_name'      => $staffName,
-        ]);
-
         $fromEmail = $this->resolveFromEmail();
         $fromName  = $this->resolveFromName();
 
@@ -393,12 +348,9 @@ class StoreLocationPageController extends PageController
             ->setHTMLTemplate('Email/StaffContactFormEmail')
             ->setData($data);
 
-        $replyTo = trim($data['Email'] ?? '');
-        if (!$this->isValidEmail($replyTo)) {
-            $replyTo = '';
-        }
-        if ($replyTo) {
-            $email->addReplyTo($replyTo, $data['Name'] ?? null);
+        $replyTo = trim((string)($data['Email'] ?? ''));
+        if ($replyTo && $this->isValidEmail($replyTo)) {
+            $email->setReplyTo($replyTo);
         }
 
         try {
@@ -406,16 +358,15 @@ class StoreLocationPageController extends PageController
             $submission->Status = 'Emailed';
             $submission->write();
 
-            $form->sessionMessage('Thanks! Your message has been sent.', 'good');
+            $form->sessionMessage('Thanks! Your message has been sent.', ValidationResult::TYPE_GOOD);
         } catch (\Throwable $e) {
             $submission->Status       = 'Error';
             $submission->ErrorMessage = $e->getMessage();
             $submission->write();
 
-            $form->sessionMessage('Sorry, something went wrong sending your message.', 'bad');
+            $form->sessionMessage('Sorry, something went wrong sending your message.', ValidationResult::TYPE_ERROR);
         }
 
         return $this->redirectBack();
     }
-
 }
