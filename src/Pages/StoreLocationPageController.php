@@ -30,7 +30,10 @@ class StoreLocationPageController extends PageController
         'doContactForm',
         'StaffContactForm',
         'doStaffContactForm',
+        'envcheck',
     ];
+
+    
 
     protected function init()
     {
@@ -295,9 +298,11 @@ class StoreLocationPageController extends PageController
         $required = RequiredFields::create(['Name', 'Email', 'Message']);
         $form = Form::create($this, 'StaffContactForm', $fields, $actions, $required);
 
-        if (method_exists($form, 'enableSpamProtection')) {
-            $form->enableSpamProtection();
-        }
+        // if (method_exists($form, 'enableSpamProtection')) {
+        //     $form->enableSpamProtection();
+        // }
+
+        $form->enableSpamProtection();
 
         return $form;
     }
