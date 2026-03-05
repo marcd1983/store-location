@@ -182,9 +182,11 @@ class StoreLocationPageController extends PageController
         $form     = Form::create($this, 'ContactForm', $fields, $actions, $required);
 
         // Pluggable spam protector (will be NSWDPC if configured)
-        if (method_exists($form, 'enableSpamProtection')) {
-            $form->enableSpamProtection();
-        }
+        // if (method_exists($form, 'enableSpamProtection')) {
+        //     $form->enableSpamProtection();
+        // }
+
+        $form->enableSpamProtection();
 
         return $form;
     }
