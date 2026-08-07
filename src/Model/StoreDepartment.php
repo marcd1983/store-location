@@ -35,7 +35,7 @@ class StoreDepartment extends DataObject
     public function getCMSFields()
     {
         $fields = parent::getCMSFields();
-        $fields->removeByName(['Locations', 'StaffMembers']);
+        $fields->removeByName(['Title', 'Email', 'Phone', 'Locations', 'StaffMembers']);
         $fields->addFieldsToTab('Root.Main', [
             TextField::create('Title', 'Department Name'),
             TextField::create('Email', 'Department Email'),

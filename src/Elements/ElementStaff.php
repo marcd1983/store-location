@@ -48,6 +48,8 @@ class ElementStaff extends BaseElement
     {
         $fields = parent::getCMSFields();
 
+        $fields->removeByName(['Columns', 'StaffMembers']);
+
         $fields->addFieldsToTab('Root.Main', [
             DropdownField::create('Columns', 'Card columns', array_combine(range(2, 6), range(2, 6)))
                 ->setEmptyString('Auto'),

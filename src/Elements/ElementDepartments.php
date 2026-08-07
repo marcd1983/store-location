@@ -57,6 +57,13 @@ class ElementDepartments extends BaseElement
     {
         $fields = parent::getCMSFields();
 
+        $fields->removeByName([
+            'ScopeToCurrentLocation',
+            'ShowOtherStaff',
+            'Columns',
+            'Departments',
+        ]);
+
         // Controls
         $fields->addFieldsToTab('Root.Main', [
             CheckboxField::create('ScopeToCurrentLocation', 'Only show staff linked to this location'),

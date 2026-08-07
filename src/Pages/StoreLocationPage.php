@@ -128,7 +128,19 @@ class StoreLocationPage extends Page
         $fields = parent::getCMSFields();
 
         // Group address/contact into a tidy accordion
-        $fields->removeByName(['Address','Address2','City','State','Zip','Phone','Email','Notes']);
+        $fields->removeByName([
+            'LocationName',
+            'Address',
+            'Address2',
+            'City',
+            'State',
+            'Zip',
+            'Phone',
+            'Email',
+            'MapLinkURL',
+            'MapEmbedURL',
+            'Notes',
+        ]);
 
         $locationDetails = ToggleCompositeField::create(
             'LocationDetails',
@@ -174,8 +186,8 @@ class StoreLocationPage extends Page
             )
         );
 
-        // Departments tab
-        $fields->removeByName('LocationRecipients');
+        // Location recipients tab
+        $fields->removeByName('Mailto');
         $fields->addFieldToTab(
             'Root.LocationRecipients',
             TextField::create('Mailto', 'Location Recipients')
