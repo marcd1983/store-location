@@ -19,7 +19,7 @@ use SilverStripe\ORM\FieldType\DBDatetime;
 use SilverStripe\SiteConfig\SiteConfig;
 use Antlion\StoreLocation\Model\StoreDepartment;
 use Antlion\StoreLocation\Model\StaffMember;
-use SilverStripe\ORM\ValidationResult;
+use SilverStripe\Core\Validation\ValidationResult;
 use App\Models\FormSubmission;
 
 

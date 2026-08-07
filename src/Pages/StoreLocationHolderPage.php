@@ -2,8 +2,8 @@
 
 namespace Antlion\StoreLocation\Pages;
 
-use SilverStripe\ORM\ArrayList;
-use SilverStripe\View\ArrayData;
+use SilverStripe\Model\List\ArrayList;
+use SilverStripe\Model\ArrayData;
 use Page;
 class StoreLocationHolderPage extends Page
 {

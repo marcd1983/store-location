@@ -12,8 +12,8 @@ use Symbiote\GridFieldExtensions\GridFieldOrderableRows;
 use Antlion\StoreLocation\Model\StoreDepartment;
 use Antlion\StoreLocation\Model\StaffMember;
 use Antlion\StoreLocation\Pages\StoreLocationPage;
-use SilverStripe\ORM\ArrayList;
-use SilverStripe\View\ArrayData;
+use SilverStripe\Model\List\ArrayList;
+use SilverStripe\Model\ArrayData;
 
 class ElementDepartments extends BaseElement
 {

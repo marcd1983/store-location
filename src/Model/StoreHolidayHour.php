@@ -7,7 +7,7 @@ use SilverStripe\Forms\DateField;
 use SilverStripe\Forms\TimeField;
 use SilverStripe\Forms\CheckboxField;
 use SilverStripe\Forms\TextField;
-use SilverStripe\ORM\ValidationException;
+use SilverStripe\Core\Validation\ValidationException;
 
 /**
  * Per-date override for a StoreSchedule.

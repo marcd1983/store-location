@@ -10,11 +10,11 @@ use SilverStripe\Forms\GridField\GridFieldConfig_RelationEditor;
 use SilverStripe\Forms\TextField;
 use SilverStripe\Forms\TextareaField;
 use SilverStripe\Forms\ToggleCompositeField;
-use SilverStripe\View\ArrayData;
+use SilverStripe\Model\ArrayData;
 use Antlion\StoreLocation\Model\StoreDepartment;
 use Antlion\StoreLocation\Model\StaffMember;
 use Antlion\StoreLocation\Model\StoreSchedule;
-use SilverStripe\ORM\ArrayList;
+use SilverStripe\Model\List\ArrayList;
 
 
 class StoreLocationPage extends Page

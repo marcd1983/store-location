@@ -4,7 +4,7 @@ namespace Antlion\StoreLocation\Model;
 
 use SilverStripe\ORM\DataObject;
 use SilverStripe\Forms\FieldList;
-use SilverStripe\View\ArrayData;
+use SilverStripe\Model\ArrayData;
 use SilverStripe\Forms\GridField\GridField;
 use SilverStripe\Forms\GridField\GridFieldConfig_RecordEditor;
 use SilverStripe\Forms\GridField\GridFieldAddNewButton;
