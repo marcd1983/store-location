@@ -1,3 +1,4 @@
+<% cached $ID, $LastEdited %>
 <div class="card">
                   <% if $Image %>
                     <picture>
@@ -13,3 +14,4 @@
                     <% if $Email %><a class="button small hollow" href="mailto:$Email.XML">Email</a><% end_if %>
                   </div>
                 </div>
+<% end_cached %>

@@ -1,4 +1,5 @@
 <% if $MapEmbedURL %>
+<% cached $ID, $LastEdited %>
 <div class="grid-x grid-padding-x grid-padding-y">
 <div class="cell">
   <div class="responsive-embed panormama">
@@ -10,4 +11,5 @@
   </div>
 </div>
 </div>
+<% end_cached %>
 <% end_if %>

@@ -1,4 +1,5 @@
   <% if $DefaultScheduleID %>
+  <% cached $ID, $LastEdited, $Now.Format('Y-m-d'), $DefaultSchedule.LastEdited, $DefaultSchedule.Hours.Count, $DefaultSchedule.Hours.Max('LastEdited'), $DefaultSchedule.HolidayHours.Count, $DefaultSchedule.HolidayHours.Max('LastEdited') %>
   <div class="grid-x grid-padding-x grid-padding-y">
     <section class="cell store-hours-table">
       <h3 class="section-title">Weekly Hours</h3>
@@ -61,4 +62,5 @@
       <% end_if %>
     </section>
   </div>
+  <% end_cached %>
   <% end_if %>
