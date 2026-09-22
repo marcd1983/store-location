@@ -1,0 +1,132 @@
+en:
+  Antlion\StoreLocation\Admin\StoreOperationsAdmin:
+    MENUTITLE: 'Store Staff & Hours'
+  Antlion\StoreLocation\Elements\ElementDepartments:
+    PLURALNAME: 'Department Staff Blocks'
+    PLURALS:
+      one: 'A Department Staff'
+      other: '{count} Department Staff Blocks'
+    SINGULARNAME: 'Department Staff'
+    db_Columns: Columns
+    db_ScopeToCurrentLocation: 'Scope to current location'
+    db_ShowOtherStaff: 'Show other staff'
+    many_many_Departments: Departments
+  Antlion\StoreLocation\Elements\ElementStaff:
+    PLURALNAME: 'Staff List (curated)'
+    PLURALS:
+      one: 'A Staff List (curated)'
+      other: '{count} Staff List (curated)'
+    SINGULARNAME: 'Staff List (curated)'
+    db_Columns: Columns
+    db_ScopeToCurrentLocation: 'Scope to current location'
+    many_many_StaffMembers: 'Staff members'
+  Antlion\StoreLocation\Extensions\StoreLocationPageExtension:
+    has_one_StoreSchedule: 'Store schedule'
+  Antlion\StoreLocation\Model\StaffMember:
+    PLURALNAME: 'Staff Members'
+    PLURALS:
+      one: 'A Staff Member'
+      other: '{count} Staff Members'
+    SINGULARNAME: 'Staff Member'
+    db_Bio: Bio
+    db_Email: Email
+    db_FirstName: 'First name'
+    db_HideStaff: 'Hide staff'
+    db_LastName: 'Last name'
+    db_Phone: Phone
+    db_Title: Title
+    has_one_Image: Image
+    many_many_Departments: Departments
+    many_many_Locations: Locations
+  Antlion\StoreLocation\Model\StoreDepartment:
+    PLURALNAME: 'Store Departments'
+    PLURALS:
+      one: 'A Store Department'
+      other: '{count} Store Departments'
+    SINGULARNAME: 'Store Department'
+    belongs_many_many_StaffMembers: 'Staff members'
+    db_Email: Email
+    db_Phone: Phone
+    db_Title: Title
+    many_many_Locations: Locations
+  Antlion\StoreLocation\Model\StoreHolidayHour:
+    PLURALNAME: 'Store Holiday Hours'
+    PLURALS:
+      one: 'A Store Holiday Hour'
+      other: '{count} Store Holiday Hours'
+    SINGULARNAME: 'Store Holiday Hour'
+    db_CloseTime: 'Close time'
+    db_Date: Date
+    db_IsClosed: 'Is closed'
+    db_IsRecurring: 'Is recurring'
+    db_Note: Note
+    db_OpenTime: 'Open time'
+    has_one_StoreSchedule: 'Store schedule'
+  Antlion\StoreLocation\Model\StoreHour:
+    PLURALNAME: 'Store Hours'
+    PLURALS:
+      one: 'A Store Hour'
+      other: '{count} Store Hours'
+    SINGULARNAME: 'Store Hour'
+    db_CloseTime: 'Close time'
+    db_DayOfWeek: 'Day of week'
+    db_IsClosed: 'Is closed'
+    db_Label: Label
+    db_OpenTime: 'Open time'
+    db_Sort: Sort
+    has_one_StoreSchedule: 'Store schedule'
+  Antlion\StoreLocation\Model\StoreSchedule:
+    PLURALNAME: 'Store Schedules'
+    PLURALS:
+      one: 'A Store Schedule'
+      other: '{count} Store Schedules'
+    SINGULARNAME: 'Store Schedule'
+    db_Notes: Notes
+    db_Title: Title
+    has_many_HolidayHours: 'Holiday hours'
+    has_many_Hours: Hours
+  Antlion\StoreLocation\Pages\StoreLocationHolderPage:
+    PLURALNAME: 'Store Location Holder Pages'
+    PLURALS:
+      one: 'A Store Location Holder Page'
+      other: '{count} Store Location Holder Pages'
+    SINGULARNAME: 'Store Location Holder Page'
+  Antlion\StoreLocation\Pages\StoreLocationPage:
+    PLURALNAME: 'Store Location Pages'
+    PLURALS:
+      one: 'A Store Location Page'
+      other: '{count} Store Location Pages'
+    SINGULARNAME: 'Store Location Page'
+    belongs_many_many_Departments: Departments
+    belongs_many_many_StaffMembers: 'Staff members'
+    db_Address: Address
+    db_Address2: Address2
+    db_City: City
+    db_Email: Email
+    db_LocationName: 'Location name'
+    db_Mailto: Mailto
+    db_MapEmbedURL: 'Map embed URL'
+    db_MapLinkURL: 'Map link URL'
+    db_Notes: Notes
+    db_Phone: Phone
+    db_State: State
+    db_Zip: Zip
+    has_one_DefaultSchedule: 'Default schedule'
+  App\Fields\DepartmentDropdownField:
+    PLURALNAME: 'Department dropdowns'
+    PLURALS:
+      one: 'A Department dropdown'
+      other: '{count} Department dropdowns'
+    SINGULARNAME: 'Department dropdown'
+    db_EmptyString: 'Empty string'
+    db_LimitToLocation: 'Limit to location'
+    db_OnlyWithEmail: 'Only with email'
+  App\UserForms\Fields\LocationDropdownField:
+    PLURALNAME: 'Location dropdowns'
+    PLURALS:
+      one: 'A Location dropdown'
+      other: '{count} Location dropdowns'
+    SINGULARNAME: 'Location dropdown'
+    db_EmptyString: 'Empty string'
+    db_OnlyWithDepartments: 'Only with departments'
+    db_OnlyWithEmail: 'Only with email'

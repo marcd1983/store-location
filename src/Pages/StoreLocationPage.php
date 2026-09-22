@@ -45,7 +45,7 @@ class StoreLocationPage extends Page
         'StaffMembers' => StaffMember::class,
     ];
 
-    /** One schedule per location (managed in StoreHoursAdmin) */
+    /** One schedule per location (managed in StoreOperationsAdmin) */
     private static array $has_one = [
         'DefaultSchedule' => StoreSchedule::class,
     ];
@@ -164,7 +164,7 @@ class StoreLocationPage extends Page
 
         $fields->addFieldToTab('Root.Main', $locationDetails);
 
-        // Hours tab: simple selector for the schedule (managed in StoreHoursAdmin)
+        // Hours tab: simple selector for the schedule (managed in StoreOperationsAdmin)
         $fields->removeByName('DefaultScheduleID'); // ensure we control placement
         $fields->addFieldsToTab('Root.Hours', [
             DropdownField::create(

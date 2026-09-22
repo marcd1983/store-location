@@ -1,5 +1,5 @@
 
-<% include TitleBar %>
+<% include PageHeader %>
 <% if $Content %>
 		<div class="grid-x content">
 			<div class="cell">

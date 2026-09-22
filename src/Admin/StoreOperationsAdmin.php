@@ -4,24 +4,26 @@ namespace Antlion\StoreLocation\Admin;
 
 use SilverStripe\Admin\ModelAdmin;
 use SilverStripe\Forms\Form;
-use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\FieldGroup;
 use SilverStripe\Forms\NumericField;
 use SilverStripe\Forms\CheckboxField;
 use SilverStripe\Forms\FormAction;
 use SilverStripe\Forms\HiddenField;
 use SilverStripe\Forms\LiteralField;
+use Antlion\StoreLocation\Model\StaffMember;
+use Antlion\StoreLocation\Model\StoreDepartment;
 use Antlion\StoreLocation\Model\StoreSchedule;
 use Antlion\StoreLocation\Model\StoreHolidayHour;
 
-class StoreHoursAdmin extends ModelAdmin
+class StoreOperationsAdmin extends ModelAdmin
 {
-    // IMPORTANT: untyped statics so SilverStripe config picks them up
-    private static $menu_title      = 'Store Hours';
-    private static $url_segment     = 'store-hours';
-    private static $menu_icon_class = 'font-icon-clock';
+    private static string $menu_title = 'Staff & Hours';
+    private static string $url_segment = 'store-operations';
+    private static $menu_icon_class = 'font-icon-p-shop';
 
-    private static $managed_models = [
+    private static array $managed_models = [
+        StaffMember::class,
+        StoreDepartment::class,
         StoreSchedule::class,
     ];
 

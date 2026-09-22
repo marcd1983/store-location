@@ -12,7 +12,7 @@ use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\Form;
 use SilverStripe\Forms\FormAction;
 use SilverStripe\Forms\HiddenField;
-use SilverStripe\Forms\RequiredFields;
+use SilverStripe\Forms\Validation\RequiredFieldsValidator;
 use SilverStripe\Forms\TextareaField;
 use SilverStripe\Forms\TextField;
 use SilverStripe\ORM\FieldType\DBDatetime;
@@ -181,7 +181,7 @@ class StoreLocationPageController extends PageController
                 ->addExtraClass('button primary')
         );
 
-        $required = RequiredFields::create(['Name', 'Email', 'Message']);
+        $required = RequiredFieldsValidator::create(['Name', 'Email', 'Message']);
         $form     = Form::create($this, 'ContactForm', $fields, $actions, $required);
 
         // Pluggable spam protector (will be NSWDPC if configured)
@@ -295,7 +295,7 @@ class StoreLocationPageController extends PageController
                 ->addExtraClass('button')
         );
 
-        $required = RequiredFields::create(['Name', 'Email', 'Message']);
+        $required = RequiredFieldsValidator::create(['Name', 'Email', 'Message']);
         $form = Form::create($this, 'StaffContactForm', $fields, $actions, $required);
 
         // if (method_exists($form, 'enableSpamProtection')) {
