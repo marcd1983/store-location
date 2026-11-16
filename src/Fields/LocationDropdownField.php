@@ -1,6 +1,6 @@
 <?php
 
-namespace App\UserForms\Fields;
+namespace Antlion\StoreLocation\Fields;
 
 use SilverStripe\UserForms\Model\EditableFormField;
 use SilverStripe\Forms\DropdownField;

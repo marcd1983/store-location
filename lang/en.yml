@@ -20,8 +20,6 @@ en:
     db_Columns: Columns
     db_ScopeToCurrentLocation: 'Scope to current location'
     many_many_StaffMembers: 'Staff members'
-  Antlion\StoreLocation\Extensions\StoreLocationPageExtension:
-    has_one_StoreSchedule: 'Store schedule'
   Antlion\StoreLocation\Model\StaffMember:
     PLURALNAME: 'Staff Members'
     PLURALS:

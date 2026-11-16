@@ -1,9 +1,15 @@
 ---
-Name: form-fields
+Name: storelocation-formfields
 After:
   - '#userformsconfig'
 ---
 SilverStripe\UserForms\Model\EditableFormField:
   editable_field_classes:
-    - App\Fields\DepartmentDropdownField
-    - App\UserForms\Fields\LocationDropdownField
+    - Antlion\StoreLocation\Fields\DepartmentDropdownField
+    - Antlion\StoreLocation\Fields\LocationDropdownField
+
+# 2.0 moved these out of the App\ namespace; db:build rewrites stored ClassNames
+SilverStripe\Dev\Command\DbBuild:
+  classname_value_remapping:
+    App\Fields\DepartmentDropdownField: Antlion\StoreLocation\Fields\DepartmentDropdownField
+    App\UserForms\Fields\LocationDropdownField: Antlion\StoreLocation\Fields\LocationDropdownField

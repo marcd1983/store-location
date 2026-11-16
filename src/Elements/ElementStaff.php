@@ -2,6 +2,7 @@
 
 namespace Antlion\StoreLocation\Elements;
 
+use Antlion\StoreLocation\Traits\StaffGrid;
 use DNADesign\Elemental\Models\BaseElement;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\DropdownField;
@@ -13,6 +14,8 @@ use Antlion\StoreLocation\Pages\StoreLocationPage;
 
 class ElementStaff extends BaseElement
 {
+    use StaffGrid;
+
     private static string $table_name = 'ElementStaff';
     private static $icon = 'font-icon-block-user';
     private static $singular_name = 'Staff List (curated)';

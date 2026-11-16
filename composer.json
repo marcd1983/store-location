@@ -1,6 +1,6 @@
 {
     "name": "antlion/store-location",
-    "description": "Store location module",
+    "description": "Store locations for Silverstripe CMS: addresses, weekly and holiday hours, departments, staff and department-routed contact forms",
     "license": "BSD-3-Clause",
     "type": "silverstripe-vendormodule",
     "keywords": [
@@ -26,5 +26,15 @@
     },
     "config": {
         "process-timeout": 600
+    },
+    "suggest": {
+        "antlion/silverwind": "Tailwind CSS 4 + daisyUI 5 theme the default templates are built for",
+        "antlion/silverwind-blocks": "Shared block heading levels/spacing for the staff blocks",
+        "silverstripe/spamprotection": "Spam protection (e.g. reCAPTCHA) on the contact forms"
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-2.x": "2.x-dev"
+        }
     }
 }

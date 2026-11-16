@@ -2,6 +2,7 @@
 
 namespace Antlion\StoreLocation\Elements;
 
+use Antlion\StoreLocation\Traits\StaffGrid;
 use DNADesign\Elemental\Models\BaseElement;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\CheckboxField;
@@ -17,6 +18,8 @@ use SilverStripe\Model\ArrayData;
 
 class ElementDepartments extends BaseElement
 {
+    use StaffGrid;
+
     private static string $table_name = 'ElementDepartments';
 
     private static $icon = 'font-icon-block-users';

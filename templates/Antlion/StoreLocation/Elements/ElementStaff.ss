@@ -1,14 +1,5 @@
-<div class="element element-staff">
-   <% if $Title && $ShowTitle %><h2 class="element-title">$Title</h2><% end_if %>
-  <% if $OrderedStaff.Count %>
-    <div class="grid-x grid-padding-x grid-padding-y large-up-{$Top.Columns}">
-      <% loop $OrderedStaff %>
-      <div class="cell">
-        <% include StaffCard %>
-      </div>
-      <% end_loop %>
-    </div>
-  <% else %>
-    <p>No staff selected.</p>
-  <% end_if %>
-</div>
+<%-- Curated staff list. $RenderedTitle comes from silverwind-blocks when installed --%>
+<% if $RenderedTitle %>$RenderedTitle<% else_if $Title && $ShowTitle %><h2 class="mb-6 text-2xl font-bold tracking-tight sm:text-3xl">$Title.XML</h2><% end_if %>
+<% if $OrderedStaff %>
+    <% include Antlion/StoreLocation/Includes/StaffGrid Staff=$OrderedStaff, GridClass=$GridClass, Heading=$CardHeading %>
+<% end_if %>

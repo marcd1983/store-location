@@ -15,6 +15,8 @@ use Antlion\StoreLocation\Model\StoreDepartment;
 use Antlion\StoreLocation\Model\StaffMember;
 use Antlion\StoreLocation\Model\StoreSchedule;
 use SilverStripe\Model\List\ArrayList;
+use SilverStripe\ORM\FieldType\DBDatetime;
+use SilverStripe\ORM\FieldType\DBField;
 
 
 class StoreLocationPage extends Page
@@ -270,4 +272,188 @@ class StoreLocationPage extends Page
         return $sections;
     }
 
+    // ---- Template helpers (theme-neutral data; markup lives in templates) ----
+
+    /**
+     * schema.org type for the LocalBusiness JSON-LD, e.g. "HardwareStore",
+     * "AutoPartsStore". Set per project in YAML.
+     */
+    private static string $schema_type = 'LocalBusiness';
+
+    /** The page's schedule, if it has one */
+    public function getSchedule(): ?StoreSchedule
+    {
+        $schedule = $this->DefaultSchedule();
+
+        return $schedule && $schedule->exists() ? $schedule : null;
+    }
+
+    /**
+     * Today's effective hours (holiday overrides weekly), plus IsOpenNow.
+     * Uses the site's timezone via DBDatetime, so it can be mocked in tests.
+     */
+    public function getTodaysHours(): ArrayData
+    {
+        $now = DBDatetime::now();
+        $hours = $this->effectiveHoursForDate($now->Format('y-MM-dd'));
+        $time = $now->Format('HH:mm:ss');
+
+        $hours->setField('IsOpenNow', !$hours->IsClosed
+            && $hours->OpenTime && $hours->CloseTime
+            && $time >= $hours->OpenTime && $time < $hours->CloseTime);
+
+        return $hours;
+    }
+
+    /**
+     * Mon–Sun rows for an hours table, with IsToday flagged.
+     *
+     * @return ArrayList<ArrayData>
+     */
+    public function getWeeklyHours(): ArrayList
+    {
+        $rows = ArrayList::create();
+        $schedule = $this->getSchedule();
+        if (!$schedule) {
+            return $rows;
+        }
+
+        // ISO weekday 1..7 (Mon..Sun) of today's date, as hoursForDate() computes it
+        $today = (int) date('N', strtotime(DBDatetime::now()->Format('y-MM-dd')));
+        foreach ($schedule->Hours()->sort('Sort') as $hour) {
+            $rows->push(ArrayData::create([
+                'Day' => $hour->Label ?: $hour->DayName,
+                'IsClosed' => (bool) $hour->IsClosed,
+                'Opens' => $hour->OpenTimeNice,
+                'Closes' => $hour->CloseTimeNice,
+                'IsToday' => (int) $hour->DayOfWeek === $today,
+            ]));
+        }
+
+        return $rows;
+    }
+
+    /**
+     * The next holiday/special-hours dates, soonest first. Recurring
+     * entries are shown on their next occurrence.
+     *
+     * @return ArrayList<ArrayData>
+     */
+    public function UpcomingHolidays(int $limit = 6): ArrayList
+    {
+        $schedule = $this->getSchedule();
+        if (!$schedule) {
+            return ArrayList::create();
+        }
+
+        $today = DBDatetime::now()->Format('y-MM-dd');
+        $year = (int) substr($today, 0, 4);
+        $items = [];
+
+        foreach ($schedule->HolidayHours() as $holiday) {
+            if (!$holiday->Date) {
+                continue;
+            }
+            $date = $holiday->Date;
+            if ($holiday->IsRecurring) {
+                $monthDay = substr($date, 5);
+                $date = "{$year}-{$monthDay}";
+                if ($date < $today) {
+                    $date = ($year + 1) . "-{$monthDay}";
+                }
+            }
+            if ($date < $today) {
+                continue;
+            }
+            $items[] = ArrayData::create([
+                'Date' => DBField::create_field('Date', $date),
+                'Name' => $holiday->Note,
+                'IsClosed' => (bool) $holiday->IsClosed,
+                'Opens' => $holiday->OpenTimeNice,
+                'Closes' => $holiday->CloseTimeNice,
+                'IsRecurring' => (bool) $holiday->IsRecurring,
+                'SortKey' => $date,
+            ]);
+        }
+
+        usort($items, fn ($a, $b) => strcmp($a->SortKey, $b->SortKey));
+
+        return ArrayList::create(array_slice($items, 0, $limit));
+    }
+
+    /** Google Maps link: the editor's own link, or a search for the address */
+    public function getMapURL(): ?string
+    {
+        if ($this->MapLinkURL) {
+            return $this->MapLinkURL;
+        }
+        $address = $this->getFullAddress();
+
+        return $address ? 'https://www.google.com/maps/search/?api=1&query=' . rawurlencode($address) : null;
+    }
+
+    /** tel: href with only digits and a leading + */
+    public function getPhoneHref(): ?string
+    {
+        $digits = preg_replace('/[^0-9+]/', '', (string) $this->Phone);
+
+        return $digits ? 'tel:' . $digits : null;
+    }
+
+    public function getDisplayName(): string
+    {
+        return $this->LocationName ?: $this->Title;
+    }
+
+    /**
+     * LocalBusiness JSON-LD for this location, built with json_encode so
+     * any characters in addresses or names stay valid JSON.
+     */
+    public function getLocalBusinessSchemaJSON(): string
+    {
+        $node = array_filter([
+            '@context' => 'https://schema.org',
+            '@type' => static::config()->get('schema_type') ?: 'LocalBusiness',
+            'name' => $this->getDisplayName(),
+            'url' => $this->AbsoluteLink(),
+            'telephone' => $this->Phone ?: null,
+            'email' => $this->Email ?: null,
+            'address' => array_filter([
+                '@type' => 'PostalAddress',
+                'streetAddress' => trim(implode(', ', array_filter([$this->Address, $this->Address2]))) ?: null,
+                'addressLocality' => $this->City ?: null,
+                'addressRegion' => $this->State ?: null,
+                'postalCode' => $this->Zip ?: null,
+            ]),
+            'hasMap' => $this->getMapURL(),
+            'openingHoursSpecification' => $this->openingHoursSpecification() ?: null,
+        ]);
+
+        $this->extend('updateLocalBusinessSchema', $node);
+
+        return json_encode($node, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) ?: '{}';
+    }
+
+    private function openingHoursSpecification(): array
+    {
+        $schedule = $this->getSchedule();
+        if (!$schedule) {
+            return [];
+        }
+
+        $specs = [];
+        foreach ($schedule->Hours()->sort('Sort') as $hour) {
+            if ($hour->IsClosed || !$hour->OpenTime || !$hour->CloseTime) {
+                continue;
+            }
+            $specs[] = [
+                '@type' => 'OpeningHoursSpecification',
+                'dayOfWeek' => 'https://schema.org/' . $hour->DayName,
+                'opens' => substr($hour->OpenTime, 0, 5),
+                'closes' => substr($hour->CloseTime, 0, 5),
+            ];
+        }
+
+        return $specs;
+    }
 }
