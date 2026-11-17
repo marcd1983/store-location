@@ -1,3 +1,8 @@
 ---
 Name: store-locations-config
 ---
+# Coordinates for new/changed addresses come from OpenStreetMap's Nominatim
+# (see NominatimGeocoder for its usage policy). Swap in another Geocoder here.
+SilverStripe\Core\Injector\Injector:
+  Antlion\StoreLocation\Geocoding\Geocoder:
+    class: Antlion\StoreLocation\Geocoding\NominatimGeocoder

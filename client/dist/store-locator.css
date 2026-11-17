@@ -1,0 +1,34 @@
+/*
+ * Store locator extras on top of Leaflet's own stylesheet. Plain CSS so it
+ * works without the theme scanning it; colours come from the theme's
+ * daisyUI variables, with fallbacks.
+ */
+
+/* Popups and attribution use the site's font */
+.leaflet-container {
+  font: inherit;
+}
+
+.leaflet-popup-content {
+  display: grid;
+  gap: 0.25rem;
+  margin: 0.75rem 1rem;
+  line-height: 1.4;
+}
+
+.leaflet-popup-content a {
+  color: var(--color-primary, #2563eb);
+  font-weight: 600;
+}
+
+/* The nearest location after "Use my location" */
+[data-nearest] > * {
+  outline: 2px solid var(--color-primary, #2563eb);
+  outline-offset: 2px;
+}
+
+/* Keyboard focus on markers */
+.leaflet-marker-icon:focus-visible {
+  outline: 3px solid var(--color-primary, #2563eb);
+  outline-offset: 2px;
+}

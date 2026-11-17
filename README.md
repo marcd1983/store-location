@@ -4,6 +4,7 @@ Store locations for Silverstripe CMS 6: addresses, weekly and holiday hours,
 departments, staff, and contact forms that route each message to the right
 people.
 
+- **Locations page**: a store locator, see below.
 - **Location page**: address, directions, phone/email, an "Open now" badge,
   this week's hours (today highlighted), upcoming holiday hours, a map embed,
   staff grouped by department, a contact form, and LocalBusiness JSON-LD
@@ -47,6 +48,44 @@ rebuild the theme:
 
 `src/` is scanned because the staff grid's column classes live in PHP
 (`Traits/StaffGrid.php`).
+
+## Store locator
+
+The locations holder page lists every location with a **map** (Leaflet +
+OpenStreetMap tiles) and a **Use my location** button that sorts the list by
+distance and marks the nearest. Distances are worked out in the browser: the
+visitor's position is never sent anywhere. Without JavaScript the page is a
+plain list.
+
+- **Coordinates** come from the address when a location is saved, using
+  OpenStreetMap's Nominatim geocoder (free, no key). Editors can correct
+  the Latitude/Longitude under *Location details*; a manual correction is
+  kept. A location without coordinates is listed but not on the map.
+- **Leaflet 1.9.4** ships in `client/vendor/leaflet` (no CDN, works with a
+  strict `script-src 'self'`) and is loaded only when the map is shown.
+- **Cookie consent:** with innoweb/silverstripe-cookie-consent, the map
+  waits for the `External` group (tiles come from a third party), with a
+  "Load map" button meanwhile.
+
+```yaml
+Antlion\StoreLocation\Pages\StoreLocationHolderPage:
+  distance_unit: km                 # default mi
+  map_consent_group: External       # null: always load the map
+  # Busy sites: use a tile provider rather than OpenStreetMap's own servers
+  map_tile_url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
+  map_attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+
+Antlion\StoreLocation\Pages\StoreLocationPage:
+  geocode_on_save: true             # false: coordinates by hand only
+
+Antlion\StoreLocation\Geocoding\NominatimGeocoder:
+  email: you@example.com            # contact for Nominatim's operators
+```
+
+Nominatim's usage policy allows light use like this (one request when an
+address is saved, never per page view). Bulk imports or busy sites should
+use their own or a commercial geocoder: implement
+`Antlion\StoreLocation\Geocoding\Geocoder` and bind it with the Injector.
 
 ## Routing contact messages
 

@@ -3,7 +3,12 @@
 namespace Antlion\StoreLocation\Pages;
 
 use Page;
-use SilverStripe\Core\Config\Config;
+use Antlion\StoreLocation\Consent;
+use Antlion\StoreLocation\Geocoding\Geocoder;
+use SilverStripe\Core\Injector\Injector;
+use SilverStripe\Forms\FieldGroup;
+use SilverStripe\Forms\NumericField;
+use SilverStripe\ORM\DataObject;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\DropdownField;
 use SilverStripe\Forms\GridField\GridField;
@@ -40,6 +45,9 @@ class StoreLocationPage extends Page
         'MapLinkURL'  => 'Varchar(2048)',
         'Notes'    => 'Text',
         'Mailto'   => 'Varchar(255)',
+        // Map position. 0,0 means "not set" (filled from the address on save)
+        'Latitude' => 'Decimal(9,6)',
+        'Longitude' => 'Decimal(9,6)',
     ];
 
     /** Relations to your other models */
@@ -107,6 +115,47 @@ class StoreLocationPage extends Page
                 }
             }
         }
+
+        $this->geocodeIfNeeded();
+    }
+
+    /** Look up coordinates from the address when it's saved (Geocoder service) */
+    private static bool $geocode_on_save = true;
+
+    private const array ADDRESS_FIELDS = ['Address', 'Address2', 'City', 'State', 'Zip'];
+
+    /**
+     * Fills Latitude/Longitude from the address when the address changes or
+     * there are no coordinates yet, unless the editor set coordinates in the
+     * same save (a manual correction wins).
+     */
+    private function geocodeIfNeeded(): void
+    {
+        if (!static::config()->get('geocode_on_save') || !$this->getFullAddress()) {
+            return;
+        }
+
+        $addressChanged = false;
+        foreach (self::ADDRESS_FIELDS as $field) {
+            $addressChanged = $addressChanged || $this->isChanged($field, DataObject::CHANGE_VALUE);
+        }
+        $coordinatesEdited = $this->isChanged('Latitude', DataObject::CHANGE_VALUE)
+            || $this->isChanged('Longitude', DataObject::CHANGE_VALUE);
+
+        if ($coordinatesEdited || (!$addressChanged && $this->getHasCoordinates())) {
+            return;
+        }
+
+        $point = Injector::inst()->get(Geocoder::class)->geocode($this->getFullAddress());
+        if ($point) {
+            $this->Latitude = $point['lat'];
+            $this->Longitude = $point['lng'];
+        }
+    }
+
+    public function getHasCoordinates(): bool
+    {
+        return (float) $this->Latitude !== 0.0 || (float) $this->Longitude !== 0.0;
     }
 
     /**
@@ -143,6 +192,8 @@ class StoreLocationPage extends Page
             'MapLinkURL',
             'MapEmbedURL',
             'Notes',
+            'Latitude',
+            'Longitude',
         ]);
 
         $locationDetails = ToggleCompositeField::create(
@@ -162,6 +213,13 @@ class StoreLocationPage extends Page
                 TextField::create('MapEmbedURL', 'Google Maps embed URL')
                 ->setDescription('Paste the URL from the Google Maps “Share → Embed a map → Copy HTML”, then strip everything except the src URL that starts with https://www.google.com/maps/embed?pb=...'),
                 TextareaField::create('Notes', 'Notes')->setRows(3),
+                FieldGroup::create('Map position', [
+                    NumericField::create('Latitude', 'Latitude')->setScale(6),
+                    NumericField::create('Longitude', 'Longitude')->setScale(6),
+                ])->setName('Coordinates')->setDescription(
+                    'Filled in from the address when it\'s saved (OpenStreetMap). If the pin on the locations map is off, '
+                    . 'right-click the spot in Google Maps, copy the two numbers and paste them here.'
+                ),
             ]
         )->setHeadingLevel(3)->setStartClosed(false);
 
@@ -295,16 +353,27 @@ class StoreLocationPage extends Page
      */
     public function getMapConsentGroup(): ?string
     {
-        $group = static::config()->get('map_consent_group');
-        $consent = 'Innoweb\\CookieConsent\\CookieConsent';
-        if (!$group || !class_exists($consent)) {
-            return null;
-        }
-        if (!array_key_exists($group, (array) Config::inst()->get($consent, 'cookies'))) {
-            return null;
-        }
+        return Consent::waitingFor(static::config()->get('map_consent_group'));
+    }
 
-        return $consent::check($group) ? null : $group;
+    /**
+     * This location for the store locator map/list (StoreLocationHolderPage):
+     * plain data, built server-side so the browser does no lookups.
+     */
+    public function getLocatorData(): array
+    {
+        $today = $this->getSchedule() ? $this->getTodaysHours() : null;
+
+        return [
+            'id' => $this->ID,
+            'name' => $this->getDisplayName(),
+            'address' => $this->getFullAddress(),
+            'url' => $this->Link(),
+            'lat' => $this->getHasCoordinates() ? (float) $this->Latitude : null,
+            'lng' => $this->getHasCoordinates() ? (float) $this->Longitude : null,
+            'phone' => $this->Phone ?: null,
+            'openNow' => $today ? (bool) $today->IsOpenNow : null,
+        ];
     }
 
     /** The page's schedule, if it has one */

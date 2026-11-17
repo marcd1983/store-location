@@ -21,6 +21,8 @@ class StoreLocationPageTest extends SapphireTest
     protected function setUp(): void
     {
         parent::setUp();
+        // No network: these tests don't need coordinates (see StoreLocatorTest)
+        StoreLocationPage::config()->set('geocode_on_save', false);
 
         // onAfterWrite creates a schedule: Mon–Sun 08:00–17:00
         $this->page = StoreLocationPage::create([
