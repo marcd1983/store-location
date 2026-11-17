@@ -79,8 +79,19 @@
     </div>
 
     <% if $MapEmbedURL %>
-        <div class="mt-8 aspect-[16/7] min-h-72 overflow-hidden rounded-box border border-base-300 bg-base-200">
-            <iframe src="$MapEmbedURL.ATT" title="<%t Antlion\\StoreLocation.MapOf 'Map of {name}' name=$DisplayName.ATT %>" class="size-full border-0" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>
+        <%-- With cookie consent installed, Google's map waits for $MapConsentGroup: a placeholder offers to load just this map,
+             and the theme's consent gate loads it if the visitor accepts the group in the banner --%>
+        <div class="relative mt-8 aspect-[16/7] min-h-72 overflow-hidden rounded-box border border-base-300 bg-base-200"<% if $MapConsentGroup %> x-data="{ shown: false }" @consent-activated="shown = true"<% end_if %>>
+            <iframe <% if $MapConsentGroup %>data-cookie-consent="$MapConsentGroup.ATT" data-src="$MapEmbedURL.ATT" x-ref="map"<% else %>src="$MapEmbedURL.ATT"<% end_if %> title="<%t Antlion\\StoreLocation.MapOf 'Map of {name}' name=$DisplayName.ATT %>" class="size-full border-0" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>
+            <% if $MapConsentGroup %>
+                <div x-show="!shown" class="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-base-200 p-6 text-center">
+                    <p class="max-w-md text-sm opacity-80"><%t Antlion\\StoreLocation.MapConsent 'The map is provided by Google, which may set cookies.' %></p>
+                    <div class="flex flex-wrap justify-center gap-2">
+                        <button type="button" class="btn btn-primary btn-sm" @click="$refs.map.src = $refs.map.dataset.src; shown = true"><%t Antlion\\StoreLocation.LoadMap 'Load map' %></button>
+                        <% if $MapURL %><a href="$MapURL.ATT" class="btn btn-outline btn-sm" target="_blank" rel="noopener noreferrer"><%t Antlion\\StoreLocation.OpenInMaps 'Open in Google Maps' %><span class="sr-only"> <%t Antlion\\StoreLocation.NewTab '(opens in a new tab)' %></span></a><% end_if %>
+                    </div>
+                </div>
+            <% end_if %>
         </div>
     <% end_if %>
 

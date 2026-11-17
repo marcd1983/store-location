@@ -3,6 +3,7 @@
 namespace Antlion\StoreLocation\Pages;
 
 use Page;
+use SilverStripe\Core\Config\Config;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\DropdownField;
 use SilverStripe\Forms\GridField\GridField;
@@ -279,6 +280,32 @@ class StoreLocationPage extends Page
      * "AutoPartsStore". Set per project in YAML.
      */
     private static string $schema_type = 'LocalBusiness';
+
+    /**
+     * Cookie consent group the Google Maps embed needs before it loads
+     * (innoweb/silverstripe-cookie-consent). Until the visitor accepts it,
+     * the template shows a placeholder with "Load map". Set to null, or
+     * leave the group out of the consent config, to always load the map.
+     */
+    private static ?string $map_consent_group = 'External';
+
+    /**
+     * The consent group the map is waiting for, or null when it can load
+     * now (no consent module, group not configured, or already accepted).
+     */
+    public function getMapConsentGroup(): ?string
+    {
+        $group = static::config()->get('map_consent_group');
+        $consent = 'Innoweb\\CookieConsent\\CookieConsent';
+        if (!$group || !class_exists($consent)) {
+            return null;
+        }
+        if (!array_key_exists($group, (array) Config::inst()->get($consent, 'cookies'))) {
+            return null;
+        }
+
+        return $consent::check($group) ? null : $group;
+    }
 
     /** The page's schedule, if it has one */
     public function getSchedule(): ?StoreSchedule

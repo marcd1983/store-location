@@ -70,10 +70,22 @@ Antlion\StoreLocation\Pages\StoreLocationPage:
   # schema.org type for the JSON-LD, e.g. HardwareStore, AutoPartsStore
   schema_type: LocalBusiness
 
+Antlion\StoreLocation\Pages\StoreLocationPage:
+  # Cookie consent group the Google Maps embed waits for (null = always load)
+  map_consent_group: External
+
 Antlion\StoreLocation\Pages\StoreLocationPageController:
   # Classes on the form submit buttons (Foundation: 'button primary')
   submit_button_class: 'btn btn-primary'
 ```
+
+**Map embeds and cookie consent.** With innoweb/silverstripe-cookie-consent
+installed and the `map_consent_group` group configured, the map isn't loaded
+until the visitor accepts that group: a placeholder offers "Load map" (this
+map only) and "Open in Google Maps". The template marks the iframe
+`data-cookie-consent`/`data-src`, which Silverwind's consent gate activates
+when the group is accepted in the banner. Without the consent module, or if
+the group isn't configured, the map loads normally.
 
 **Timezone.** "Open now", today's hours and upcoming holidays use the
 server's PHP timezone. Set `date.timezone` to the business's timezone, or
