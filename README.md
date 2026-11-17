@@ -146,6 +146,16 @@ sites should also set `submit_button_class: 'button primary'`.
   the server, not the submission; staff contact only reaches visible staff
   at that location; the JSON-LD is always valid JSON.
 
+## Tests
+
+`tests/` covers the hours logic (weekly, holiday overrides, recurring
+holidays, open now, upcoming holidays) and the JSON-LD. Run them from a
+project that has the module installed:
+
+```sh
+vendor/bin/phpunit vendor/antlion/store-location/tests
+```
+
 ## License
 
 BSD-3-Clause
